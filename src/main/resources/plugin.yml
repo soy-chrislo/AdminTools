@@ -1,10 +1,13 @@
-name: Admin Tools
+name: AdminTools
 version: '${project.version}'
 main: com.soychristian.admintools.AdminTools
-api-version: 1.19
 commands:
   admintools:
     description: Admin Tools
     usage: /admintools
     aliases: [at]
+  listuser:
+    description: List all users
+    usage: /listuser
+    aliases: [lu]
 
