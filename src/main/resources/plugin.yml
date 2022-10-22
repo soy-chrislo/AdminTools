@@ -6,8 +6,12 @@ commands:
     description: Admin Tools
     usage: /admintools
     aliases: [at]
-  listuser:
+  listuseronline:
     description: List all users
-    usage: /listuser
+    usage: /listuseronline
     aliases: [lu]
+  listuseroffline:
+    description: List all offline users
+    usage: /listuseroffline
+    aliases: [luo]
 

@@ -1,9 +1,10 @@
 package com.soychristian.admintools.views;
 
 import com.soychristian.admintools.events.OnViewsGUIEvent;
+import com.soychristian.admintools.files.OfflinePlayersFile;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.entity.Player;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -11,26 +12,41 @@ import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.ArrayList;
 
-public class UsersOnGUI {
-    /*public void practica(){
-        ArrayList<Inventory> inventories = new ArrayList<Inventory>();
-        inventories.add(Bukkit.createInventory(null, 9 * 6, "BanGUI"));
+/*
+* La lista de jugadores desconectados ya es funcional, por medio del archivo OfflinePlayersFile.java se accede al UUID y demas propiedades almacenadas de los jugadores desconectados.
+* TODO: Agregar lore con informacion del jugador, como fecha de ultima conexion, tiempo jugado, etc.
+*  TODO: Probar paginacion (ya esta implementada, solo falta probarla)
+*
+* */
 
-    }*/
-    static ArrayList<Player> onlinePlayers = new ArrayList<Player>();
+public class UsersOffGUI {
+    // TODO: NOT READY YET
+    static OfflinePlayer[] offlinePlayers;
     static ArrayList<Inventory> inventories = new ArrayList<Inventory>();
+    static ArrayList<String> playersUUID;
 
-
-    public static void buildGui() {
+    public static void buildGui(){
         OnViewsGUIEvent.getPage().clear();
         clearCache();
-        onlinePlayers = new ArrayList<Player>(Bukkit.getOnlinePlayers());
-        inventories.add(Bukkit.createInventory(null, 9 * 6, "Online Players"));
+        playersUUID =  new ArrayList<String>(OfflinePlayersFile.get().getConfigurationSection("players").getKeys(false));
+
+        inventories.add(Bukkit.createInventory(null, 9 * 6, "Offline Players"));
         int inventario = 0;
         int numJugador = 0;
         int indexInventory = 0;
-        for (Player player : onlinePlayers){
-            ItemStack playerHead = buildHeadItem(player);
+        for (String player : playersUUID){
+            /*ItemStack playerHead = buildHeadItem(player);
+            inventories.get(inventario).setItem(indexInventory, playerHead);*/
+            // getPlayer() retornaba null aunque el jugador estuviera conectado, se pasaba el UUID del jugador pero en string, quiza era por eso.
+            // TODO: Probar con el UUID del jugador en UUID no en string.
+            if(!(Bukkit.getPlayer(OfflinePlayersFile.get().getString("players." + player + ".name")) == null)){
+                continue;
+            }
+            ItemStack playerHead = new ItemStack(Material.SKULL_ITEM, 1);
+            SkullMeta playerHeadMeta = (SkullMeta) playerHead.getItemMeta();
+            String playerName = OfflinePlayersFile.get().getString("players." + player + ".name");
+            playerHeadMeta.setDisplayName(playerName);
+            playerHead.setItemMeta(playerHeadMeta);
             inventories.get(inventario).setItem(indexInventory, playerHead);
 
             //Bukkit.broadcastMessage("Agregando el usuario numero: " + numJugador + " a inventario numero: " + inventario + " en el slot: " + indexInventory);
@@ -49,7 +65,7 @@ public class UsersOnGUI {
 
                 inventario++;
                 indexInventory = -1;
-                inventories.add(Bukkit.createInventory(null, 9 * 6, "Online Players"));
+                inventories.add(Bukkit.createInventory(null, 9 * 6, "Offline Players"));
                 Bukkit.broadcastMessage("New inventory created");
             }
 
@@ -73,23 +89,23 @@ public class UsersOnGUI {
         inventories.clear();
     }
 
-    public static ItemStack buildHeadItem(Player player) {
+    public static ItemStack buildHeadItem(OfflinePlayer player) {
         ItemStack playerHead = new ItemStack(Material.SKULL_ITEM, 1, (byte) 3);
         ItemMeta playerHeadMeta = playerHead.getItemMeta();
         //SkullMeta skullMeta = (SkullMeta) playerHeadMeta;
         SkullMeta skullMeta = (SkullMeta) Bukkit.getItemFactory().getItemMeta(Material.SKULL_ITEM); // 1.8.8
 
-        playerHeadMeta.setDisplayName(player.getDisplayName());
-        skullMeta.setOwner(player.getDisplayName()); // 1.8.8
+        playerHeadMeta.setDisplayName(player.getPlayer().getDisplayName());
+        skullMeta.setOwner(player.getPlayer().getDisplayName()); // 1.8.8
         //skullMeta.setOwnerProfile(playerList.getPlayerProfile());
 
         ArrayList<String> lore = new ArrayList<>();
         lore.add("Click to ban this player");
         lore.add("Player UUID: " + player.getUniqueId());
-        lore.add("Player IP: " + player.getAddress().getAddress().getHostAddress());
-        lore.add("Player Location: " + player.getLocation().getBlockX() + ", " + player.getLocation().getBlockY() + ", " + player.getLocation().getBlockZ());
-        lore.add("Player World: " + player.getWorld().getName());
-        lore.add("Player Gamemode: " + player.getGameMode().name());
+        lore.add("Player IP: " + player.getPlayer().getAddress().getAddress().getHostAddress());
+        lore.add("Player Location: " + player.getPlayer().getLocation().getBlockX() + ", " + player.getPlayer().getLocation().getBlockY() + ", " + player.getPlayer().getLocation().getBlockZ());
+        lore.add("Player World: " + player.getPlayer().getWorld().getName());
+        lore.add("Player Gamemode: " + player.getPlayer().getGameMode().name());
         //lore.add("Player Health: " + playerList.getHealth());
         //lore.add("Player Hunger: " + playerList.getFoodLevel());
         //lore.add("Player XP: " + playerList.getExp());
@@ -101,4 +117,5 @@ public class UsersOnGUI {
         playerHead.setItemMeta(skullMeta);
         return playerHead;
     }
+
 }

@@ -17,7 +17,7 @@ public class OnViewsGUIEvent implements Listener {
         if(!(page.containsKey(player))){
             page.put(player, 0);
         }
-        if (event.getView().getTitle().equals("BanGUI")){
+        if (event.getView().getTitle().equals("Online Players")){
             event.setCancelled(true);
             if (event.getCurrentItem() == null){
                 return;
