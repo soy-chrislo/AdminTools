@@ -95,7 +95,7 @@
         </dependency>
         <-->
 
-        <!-- For the bukkit module -->
+        <!-- For the bukkit module-->
         <dependency>
             <groupId>com.github.Revxrsal.Lamp</groupId>
             <artifactId>bukkit</artifactId>
