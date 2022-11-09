@@ -1,4 +1,4 @@
-package com.soychristian.admintools.files;
+package com.soychristian.admintools.deprecated;
 
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -36,4 +36,5 @@ public class OfflinePlayersFile {
     public static void reload(){
         customFile = YamlConfiguration.loadConfiguration(file);
     }
+
 }

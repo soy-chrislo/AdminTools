@@ -70,38 +70,17 @@
     <dependencies>
         <dependency>
             <groupId>org.spigotmc</groupId>
-            <artifactId>spigot-api</artifactId>
+            <artifactId>spigot</artifactId>
             <version>1.8.8-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
-        <dependency>
+        <!--<dependency>
             <groupId>com.github.hamza-cskn.obliviate-invs</groupId>
             <artifactId>core</artifactId>
             <version>4.1.8</version>
-        </dependency>
-        <!-->
-        <dependency>
-           <groupId>com.github.hamza-cskn.obliviate-invs</groupId>
-           <artifactId>{MODULE}</artifactId>
-           <version>4.1.8</version>
-        </dependency>
-        <-->
-        <!-- For the common module -->
-        <!--
-        <dependency>
-            <groupId>com.github.Revxrsal.Lamp</groupId>
-            <artifactId>common</artifactId>
-            <version>[version]</version>
-        </dependency>
-        <-->
+        </dependency>-->
 
-        <!-- For the bukkit module-->
-        <dependency>
-            <groupId>com.github.Revxrsal.Lamp</groupId>
-            <artifactId>bukkit</artifactId>
-            <version>3.0.71</version>
-        </dependency>
-        <!-- HeadDatabase-API -->
+
     </dependencies>
 
 </project>

@@ -1,4 +1,4 @@
-package com.soychristian.admintools.events;
+package com.soychristian.admintools.deprecated;
 
 import com.soychristian.admintools.views.UsersOnGUI;
 import org.bukkit.Material;
