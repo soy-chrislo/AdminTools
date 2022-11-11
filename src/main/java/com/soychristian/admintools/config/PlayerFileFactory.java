@@ -1,12 +1,15 @@
 package com.soychristian.admintools.config;
 
 import com.soychristian.admintools.AdminTools;
+import com.soychristian.admintools.exceptions.InvalidEncodedInventoryFormat;
 import com.soychristian.admintools.utils.EncodingDecodingItems;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -20,14 +23,14 @@ import java.util.List;
 * TODO: File to save history names of players, changed with getName().
 * */
 
-public class PlayerFileBuilder {
+public class PlayerFileFactory {
     private static File playerDataFolder;
     private static File playerFile;
     private static FileConfiguration playerConfig;
     private static AdminTools plugin;
 
-    public PlayerFileBuilder(AdminTools plugin){
-        PlayerFileBuilder.plugin = plugin;
+    public PlayerFileFactory(AdminTools plugin){
+        PlayerFileFactory.plugin = plugin;
     }
 
     public static void savePlayerData(Player player){
@@ -48,6 +51,10 @@ public class PlayerFileBuilder {
         playerConfig.set("food-level", player.getFoodLevel());
         playerConfig.set("health", player.getHealth());
         playerConfig.set("gamemode", player.getGameMode().toString());
+        if (!(player.hasPlayedBefore())){
+            playerConfig.set("mute", false);
+            playerConfig.set("vanish", false);
+        }
 
         savePlayerFile(playerFile, playerConfig);
     }
@@ -56,9 +63,12 @@ public class PlayerFileBuilder {
         savePlayerData(player);
         playerFile = setupPlayerFile(player.getName());
         playerConfig = YamlConfiguration.loadConfiguration(playerFile);
+        String zoneId = plugin.getConfig().getString("timezone");
 
-        playerConfig.set("disconnect-time", ZonedDateTime.now(ZoneId.of("America/Bogota")).toString());
-        playerConfig.set("location", player.getLocation().toString());
+        playerConfig.set("disconnect-time", ZonedDateTime.now(ZoneId.of(zoneId)).toString());
+        //playerConfig.set("location", player.getLocation().toString());
+        setPlayerLocation(player.getName(), player.getLocation());
+        playerConfig.set("is-online", false);
 
         savePlayerFile(playerFile, playerConfig);
     }
@@ -69,6 +79,7 @@ public class PlayerFileBuilder {
         playerConfig = YamlConfiguration.loadConfiguration(playerFile);
 
         playerConfig.set("connect-time", ZonedDateTime.now(ZoneId.of("America/Bogota")).toString());
+        playerConfig.set("is-online", true);
 
         savePlayerFile(playerFile, playerConfig);
     }
@@ -103,6 +114,12 @@ public class PlayerFileBuilder {
         }
     }
 
+    /*public static void savePlayerFile(String playername){
+        playerFile = setupPlayerFile(playername);
+        playerConfig = YamlConfiguration.loadConfiguration(playerFile);
+        savePlayerFile(playerFile, playerConfig);
+    }*/
+
     public static Player getPlayerByName(String playerName){
         playerFile = setupPlayerFile(playerName);
         playerConfig = YamlConfiguration.loadConfiguration(playerFile);
@@ -125,7 +142,39 @@ public class PlayerFileBuilder {
         playerConfig = YamlConfiguration.loadConfiguration(playerFile);
 
         playerConfig.set("main-inventory", EncodingDecodingItems.encodeInventory(player.getInventory()));
-        //playerConfig.set("armor", player.getInventory().getArmorContents());
+        playerConfig.set("main-armor.helmet", EncodingDecodingItems.encodeItemStack(player.getEquipment().getHelmet()));
+        playerConfig.set("main-armor.chestplate", EncodingDecodingItems.encodeItemStack(player.getEquipment().getChestplate()));
+        playerConfig.set("main-armor.leggings", EncodingDecodingItems.encodeItemStack(player.getEquipment().getLeggings()));
+        playerConfig.set("main-armor.boots", EncodingDecodingItems.encodeItemStack(player.getEquipment().getBoots()));
+
+        savePlayerFile(playerFile, playerConfig);
+        // 1.19.2 - Inventory Cache
+        if(player.getInventory().getSize() != 36){
+            ItemStack[] inventoryContents = player.getInventory().getContents();
+
+            ItemStack offhand = inventoryContents[40];
+            Inventory inventoryCache = Bukkit.createInventory(null,  36, "Inventory Cache");
+            if (offhand != null){
+                if (PlayerFileFactory.getPlayerConfig(player.getName()).isString("cache-inventory")){
+                    try {
+                        inventoryCache.setContents(EncodingDecodingItems.decodeInventory(PlayerFileFactory.getPlayerConfig(player.getName()).getString("cache-inventory")).getContents());
+
+                    } catch (InvalidEncodedInventoryFormat e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                inventoryCache.addItem(offhand);
+                PlayerFileFactory.savePlayerInventoryCache(player, inventoryCache);
+            }
+        }
+
+    }
+
+    public static void savePlayerInventoryCache(Player player, Inventory inventory){
+        playerFile = setupPlayerFile(player.getName());
+        playerConfig = YamlConfiguration.loadConfiguration(playerFile);
+
+        playerConfig.set("cache-inventory", EncodingDecodingItems.encodeInventory(inventory));
 
         savePlayerFile(playerFile, playerConfig);
     }
@@ -135,6 +184,43 @@ public class PlayerFileBuilder {
         playerConfig = YamlConfiguration.loadConfiguration(playerFile);
         return playerConfig.getString("main-inventory");
     }
+
+    public static String getEncodedInventoryCache(String playerName){
+        playerFile = setupPlayerFile(playerName);
+        playerConfig = YamlConfiguration.loadConfiguration(playerFile);
+        return playerConfig.getString("cache-inventory");
+    }
+
+    public static String getEncodedArmor(String playerName){
+        playerFile = setupPlayerFile(playerName);
+        playerConfig = YamlConfiguration.loadConfiguration(playerFile);
+        return playerConfig.getString("main-armor");
+    }
+
+    public static String getHelmetEncoded(String playerName){
+        playerFile = setupPlayerFile(playerName);
+        playerConfig = YamlConfiguration.loadConfiguration(playerFile);
+        return playerConfig.getString("main-armor.helmet");
+    }
+
+    public static String getChestplateEncoded(String playerName){
+        playerFile = setupPlayerFile(playerName);
+        playerConfig = YamlConfiguration.loadConfiguration(playerFile);
+        return playerConfig.getString("main-armor.chestplate");
+    }
+
+    public static String getLeggingsEncoded(String playerName){
+        playerFile = setupPlayerFile(playerName);
+        playerConfig = YamlConfiguration.loadConfiguration(playerFile);
+        return playerConfig.getString("main-armor.leggings");
+    }
+
+    public static String getBootsEncoded(String playerName){
+        playerFile = setupPlayerFile(playerName);
+        playerConfig = YamlConfiguration.loadConfiguration(playerFile);
+        return playerConfig.getString("main-armor.boots");
+    }
+
 
     public static void savePlayerNote(String playerName, String note){
         playerFile = setupPlayerFile(playerName);
@@ -197,14 +283,14 @@ public class PlayerFileBuilder {
         savePlayerFile(playerFile, playerConfig);
     }
 
-    public static ItemStack[] getOfflinePlayers(){
+    public static ItemStack[] getOfflinePlayers() {
         File[] playersFiles = setupFolderData().listFiles();
         //ItemStack[] offlinePlayers = new ItemStack[playersFiles.length];
         ItemStack[] offlinePlayers = new ItemStack[54];
         //for (int i = 0; i < playersFiles.length; i++) {
         for (int i = 0; i < 53; i++) {
             playerConfig = YamlConfiguration.loadConfiguration(playersFiles[i]);
-            if(!playerConfig.getBoolean("is-online")){
+            if (!playerConfig.getBoolean("is-online")) {
                 offlinePlayers[i] = new ItemStack(Material.SKULL_ITEM, 1, (short) 3);
                 ItemMeta skullMeta = offlinePlayers[i].getItemMeta();
                 skullMeta.setDisplayName(playerConfig.getString("name"));
@@ -212,5 +298,42 @@ public class PlayerFileBuilder {
             }
         }
         return offlinePlayers;
+    }
+
+    public static Location getPlayerLocation(String playername){
+        Location location = null;
+        playerFile = setupPlayerFile(playername);
+        playerConfig = YamlConfiguration.loadConfiguration(playerFile);
+
+        String world = playerConfig.getString("location.world");
+        double x = playerConfig.getDouble("location.x");
+        double y = playerConfig.getDouble("location.y");
+        double z = playerConfig.getDouble("location.z");
+        float yaw = (float) playerConfig.getDouble("location.yaw");
+        float pitch = (float) playerConfig.getDouble("location.pitch");
+
+        location = new Location(Bukkit.getWorld(world), x, y, z, yaw, pitch);
+
+        return location;
+    }
+
+    public static void setPlayerLocation(String playername, Location location){
+        playerFile = setupPlayerFile(playername);
+        playerConfig = YamlConfiguration.loadConfiguration(playerFile);
+
+        double x = location.getX();
+        double y = location.getY();
+        double z = location.getZ();
+        float yaw = location.getYaw();
+        float pitch = location.getPitch();
+        String world = location.getWorld().getName();
+
+        playerConfig.set("location.x", x);
+        playerConfig.set("location.y", y);
+        playerConfig.set("location.z", z);
+        playerConfig.set("location.yaw", yaw);
+        playerConfig.set("location.pitch", pitch);
+        playerConfig.set("location.world", world);
+        savePlayerFile(playerFile, playerConfig);
     }
 }

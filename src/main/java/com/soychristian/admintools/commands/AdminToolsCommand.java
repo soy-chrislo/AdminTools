@@ -1,7 +1,12 @@
 package com.soychristian.admintools.commands;
 
-import com.soychristian.admintools.config.PlayerFileBuilder;
+import com.soychristian.admintools.AdminTools;
+import com.soychristian.admintools.config.PlayerFileFactory;
+import com.soychristian.admintools.exceptions.InvalidEncodedInventoryFormat;
+import com.soychristian.admintools.utils.ChatManager;
+import com.soychristian.admintools.utils.EncodingDecodingItems;
 import com.soychristian.admintools.utils.SortItems;
+import com.soychristian.admintools.utils.VanishManager;
 import com.soychristian.admintools.views.AdminToolsGUI;
 import com.soychristian.admintools.views.UsersOffGUI;
 import com.soychristian.admintools.views.UsersOnGUI;
@@ -17,6 +22,11 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 
 public class AdminToolsCommand implements CommandExecutor {
+    AdminTools plugin;
+    public AdminToolsCommand(AdminTools plugin){
+        this.plugin = plugin;
+    }
+
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (sender instanceof Player){
@@ -24,6 +34,7 @@ public class AdminToolsCommand implements CommandExecutor {
             if (args.length == 0){
                 // Menu principal del plugin
                 AdminToolsGUI.buildGui(player);
+                player.sendMessage("Tu ubicacion de configuracion es: " + PlayerFileFactory.getPlayerLocation(player.getName()).toString());
             } else {
                 String option = args[0];
                 switch (option){
@@ -53,7 +64,7 @@ public class AdminToolsCommand implements CommandExecutor {
                                 note += arg + " ";
                             }
 
-                            PlayerFileBuilder.savePlayerNote(playername, note);
+                            PlayerFileFactory.savePlayerNote(playername, note);
                         } else {
                             player.sendMessage("Usage: /admintools setnote <player> <note>");
                         }
@@ -69,7 +80,7 @@ public class AdminToolsCommand implements CommandExecutor {
                                 }
                                 report += arg + " ";
                             }
-                            PlayerFileBuilder.savePlayerReport(playername, report);
+                            PlayerFileFactory.savePlayerReport(playername, report);
                         } else {
                             player.sendMessage("Usage: /admintools setnote <player> <note>");
                         }
@@ -85,7 +96,7 @@ public class AdminToolsCommand implements CommandExecutor {
                                 }
                                 warn += arg + " ";
                             }
-                            PlayerFileBuilder.savePlayerWarn(playername, warn);
+                            PlayerFileFactory.savePlayerWarn(playername, warn);
                         } else {
                             player.sendMessage("Usage: /admintools setnote <player> <note>");
                         }
@@ -95,7 +106,7 @@ public class AdminToolsCommand implements CommandExecutor {
                         BookMeta bookMeta = (BookMeta) book.getItemMeta();
                         bookMeta.setAuthor("Admin Tools");
                         bookMeta.setTitle("Player Stats");
-                        String playerLocation = PlayerFileBuilder.getPlayerConfig(player.getName()).get("location").toString()
+                        String playerLocation = PlayerFileFactory.getPlayerConfig(player.getName()).get("location").toString()
                                 .replace(",", ",\n")
                                 .replace("=", "=\n")
                                 .replace("x", ChatColor.RED + "x" + ChatColor.RESET)
@@ -111,13 +122,48 @@ public class AdminToolsCommand implements CommandExecutor {
                         break;
                     case "nosorted":
                         Inventory inventory = Bukkit.createInventory(null, 54, "Sorted Inventory");
-                        inventory.setContents(PlayerFileBuilder.getOfflinePlayers());
+                        inventory.setContents(PlayerFileFactory.getOfflinePlayers());
                         player.openInventory(inventory);
                         break;
                     case "sorted":
                         Inventory inventory1 = Bukkit.createInventory(null, 54, "Sorted Inventory");
-                        inventory1.setContents(SortItems.sortByName("abc", PlayerFileBuilder.getOfflinePlayers()));
+                        inventory1.setContents(SortItems.sortByName("abc", PlayerFileFactory.getOfflinePlayers()));
                         player.openInventory(inventory1);
+                        break;
+                    case "clear":
+                        ChatManager.clearChat(player);
+                        break;
+                    case "vanish":
+                        String playerName = player.getName();
+                        if (VanishManager.isPlayerVanish(playerName)){
+                            VanishManager.removeVanish(playerName);
+                        } else {
+                            VanishManager.applyVanish(playerName);
+                        }
+                        break;
+                    case "reload":
+                        plugin.reloadConfig();
+                        player.sendMessage("Config reloaded");
+                        break;
+                    case "inventory":
+
+                        break;
+                    case "inventory-restorer":
+
+                        break;
+                    case "inventory-cache":
+                        // Al adaptarlo en una interfaz, es importante agregarle el titulo "Inventory Cache"
+                        String encodedInventoryCache = PlayerFileFactory.getEncodedInventoryCache(player.getName());
+                        try {
+                            Inventory inventoryCache = Bukkit.createInventory(null, 36, "Inventory Cache");
+                            inventoryCache.setContents(EncodingDecodingItems.decodeInventory(encodedInventoryCache).getContents());
+                            player.openInventory(inventoryCache);
+                        } catch (InvalidEncodedInventoryFormat e) {
+                            throw new RuntimeException(e);
+                        }
+                        break;
+                    case "inventory-size":
+                        player.sendMessage("Inventory size: " + player.getInventory().getSize());
                         break;
                     default:
                         player.sendMessage("Opcion no valida.");

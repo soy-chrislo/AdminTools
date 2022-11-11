@@ -1,7 +1,7 @@
 package com.soychristian.admintools.utils;
 
 import com.soychristian.admintools.exceptions.InvalidEncodedInventoryFormat;
-import com.soychristian.admintools.config.PlayerFileBuilder;
+import com.soychristian.admintools.config.PlayerFileFactory;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -22,16 +22,26 @@ public class EncodingDecodingItems {
 
 
     public static void setup(Player player){
-        playerFile = PlayerFileBuilder.getPlayerFile(player.getName());
-        playerConfig = PlayerFileBuilder.getPlayerConfig(player.getName());
+        playerFile = PlayerFileFactory.getPlayerFile(player.getName());
+        playerConfig = PlayerFileFactory.getPlayerConfig(player.getName());
     }
     public static void saveConfig(){
-        PlayerFileBuilder.savePlayerFile(playerFile, playerConfig);
+        PlayerFileFactory.savePlayerFile(playerFile, playerConfig);
     }
 
     public static String encodeInventory(Inventory inventory){
-        ItemStack[] inventoryContents = inventory.getContents();
+        ItemStack[] inventoryContents = new ItemStack[36];
         int inventorySize = inventory.getSize();
+        if (inventorySize != 36){
+            // Para 1.19.2 41 slots.
+            for (int i = 0; i < 36; i++){
+                inventoryContents[i] = inventory.getItem(i);
+            }
+            inventorySize = 36;
+        } else {
+            // Para 1.8.8
+            inventoryContents = inventory.getContents();
+        }
         String encodedInventory = "";
 
         try {
@@ -55,6 +65,7 @@ public class EncodingDecodingItems {
 
     public static Inventory decodeInventory(String encodedInventory) throws InvalidEncodedInventoryFormat {
         ItemStack[] inventoryContents = null;
+        if (encodedInventory == null) return Bukkit.createInventory(null, 36);
         if (!(encodedInventory.contains(":"))){
             throw new InvalidEncodedInventoryFormat("Encoded inventory does not contain a size");
         }
@@ -101,6 +112,7 @@ public class EncodingDecodingItems {
 
     public static ItemStack decodeItemStack(String encodedItemStack){
         ItemStack itemStack = null;
+        if(encodedItemStack == null) return null;
 
         try {
             byte[] serializedObject = Base64.getDecoder().decode(encodedItemStack.getBytes());

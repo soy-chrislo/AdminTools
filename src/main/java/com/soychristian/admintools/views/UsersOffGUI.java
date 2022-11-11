@@ -1,12 +1,14 @@
 package com.soychristian.admintools.views;
 
-import com.soychristian.admintools.config.PlayerFileBuilder;
+import com.soychristian.admintools.config.PlayerFileFactory;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCreativeEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -20,7 +22,7 @@ public class UsersOffGUI implements Listener {
     public static Inventory buildGui(){
         int indexInventory = 0;
 
-        FileConfiguration[] players = PlayerFileBuilder.getPlayersConfig();
+        FileConfiguration[] players = PlayerFileFactory.getPlayersConfig();
 
         inventories.add(Bukkit.createInventory(null, 54, "Offline Players"));
 
@@ -63,22 +65,27 @@ public class UsersOffGUI implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        Inventory inventory = event.getInventory();
-        if (inventory.getName().equals("Offline Players")) {
-            event.setCancelled(true);
-            ItemStack currentItem = event.getCurrentItem();
-            if (currentItem != null) {
-                if (currentItem.getType() == Material.ARROW) {
-                    String itemName = currentItem.getItemMeta().getDisplayName();
-                    if (itemName.equals("Next Page")) {
-                        event.getWhoClicked().openInventory(inventories.get(currentPage + 1));
-                        currentPage++;
-                    } else if (itemName.equals("Previous Page")) {
-                        event.getWhoClicked().openInventory(inventories.get(currentPage - 1));
-                        currentPage--;
+        //if (event instanceof InventoryCreativeEvent) return;
+        Inventory inventoryEvent = event.getInventory();
+        //if(inventoryEvent.getType() == InventoryType.CHEST){
+            //if (event.getView().getTitle().contains("Offline Players")) {
+            if (inventories.contains(inventoryEvent)) {
+                event.setCancelled(true);
+
+                ItemStack currentItem = event.getCurrentItem();
+                if (currentItem != null) {
+                    if (currentItem.getType() == Material.ARROW) {
+                        String itemName = currentItem.getItemMeta().getDisplayName();
+                        if (itemName.equals("Next Page")) {
+                            event.getWhoClicked().openInventory(inventories.get(currentPage + 1));
+                            currentPage++;
+                        } else if (itemName.equals("Previous Page")) {
+                            event.getWhoClicked().openInventory(inventories.get(currentPage - 1));
+                            currentPage--;
+                        }
                     }
                 }
             }
-        }
+        //}
     }
 }

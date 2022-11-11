@@ -1,11 +1,15 @@
 package com.soychristian.admintools;
 
 import com.soychristian.admintools.commands.AdminToolsCommand;
-import com.soychristian.admintools.config.PlayerFileBuilder;
+import com.soychristian.admintools.config.LogsFileFactory;
+import com.soychristian.admintools.config.PlayerFileFactory;
 import com.soychristian.admintools.listeners.*;
 import com.soychristian.admintools.task.CheckDisplayNameTask;
+import com.soychristian.admintools.utils.ChatManager;
+import com.soychristian.admintools.utils.VanishManager;
 import com.soychristian.admintools.views.*;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -21,24 +25,32 @@ import org.bukkit.plugin.java.JavaPlugin;
 *    - Falta listar en GuiOffTest.java los jugadores desconectados segun esta propiedad. ✅
 * TODO: Estamos en UserStatsGUI.java, ya se abre el menu de stats y en el titulo el nombre del jugaodr, solo queda agregar cada item con el nombre de la propiedad y el lore con el valor de esta. Puede ser un papel.
 * TODO: Clase para filtrar/sortear los elementos de un inventario, en este caso, sortear jugadores conectados y desconectados segun el valor de sus propiedades. NullPointerException linea 23 SortItems.java. Esta clase y los comandos sorted y nosorted de AdminToolsCommand.java, estan en proceso de desarrollo.
+* TODO: El desarrollo de la GUI principal, AdminToolsGUI.java, esta en proceso.
+* TODO: Registro de comandos y mensajes en proceso con LogsFileFactory.java y ChatManager.java
+*
+*
+* Inventory Cache: 1.8.8 ✅ | 1.19.2 ✅
 * */
 
 public final class AdminTools extends JavaPlugin implements Listener {
+    private static String pluginPrefix = "[AdminTools] ";
     @Override
     public void onEnable() {
         // Plugin startup logic
         Bukkit.getLogger().info("AdminTools has been enabled!");
-        new PlayerFileBuilder(this);
+        new PlayerFileFactory(this);
+        new LogsFileFactory(this);
 
         registerEvents();
         registerCommands();
         registerTasks();
 
-
+        /*getConfig().set("chat-mute", false);
+        getConfig().set("timezone", "America/Bogota");*/
         getConfig().options().copyDefaults();
         saveDefaultConfig();
 
-        PlayerFileBuilder.setupFolderData();
+        PlayerFileFactory.setupFolderData();
     }
 
     @Override
@@ -47,7 +59,7 @@ public final class AdminTools extends JavaPlugin implements Listener {
     }
 
     public void registerCommands(){
-        this.getCommand("admintools").setExecutor(new AdminToolsCommand());
+        this.getCommand("admintools").setExecutor(new AdminToolsCommand(this));
     }
 
     public void registerEvents(){
@@ -57,12 +69,16 @@ public final class AdminTools extends JavaPlugin implements Listener {
         pm.registerEvents(new OnPlayerQuit(this), this);
         pm.registerEvents(new OnPlayerJoin(this), this);
         pm.registerEvents(new OnPlayerChangeDisplayName(this), this);
+        pm.registerEvents(new OnInventoryClose(), this);
         /* Users Interfaces Listener */
         pm.registerEvents(new UsersOffGUI(), this);
         pm.registerEvents(new UsersOnGUI(), this);
         pm.registerEvents(new UsersOptionsGUI(), this);
         pm.registerEvents(new UserStatsGUI(), this);
         pm.registerEvents(new AdminToolsGUI(), this);
+        /* Utilities */
+        pm.registerEvents(new ChatManager(this), this);
+        pm.registerEvents(new VanishManager(), this);
     }
 
     public void registerTasks(){
@@ -75,6 +91,10 @@ public final class AdminTools extends JavaPlugin implements Listener {
         saveDefaultConfig();
         getConfig().options().copyDefaults(true);
         saveConfig();
+    }
+
+    public static String getPluginPrefix(){
+        return pluginPrefix;
     }
 
 }

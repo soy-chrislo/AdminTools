@@ -1,7 +1,7 @@
 package com.soychristian.admintools.listeners;
 
 import com.soychristian.admintools.AdminTools;
-import com.soychristian.admintools.config.PlayerFileBuilder;
+import com.soychristian.admintools.config.PlayerFileFactory;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -16,10 +16,9 @@ public class OnPlayerQuit implements Listener {
     public void onPlayerLeft(PlayerQuitEvent event){
         Player player = event.getPlayer();
         //plugin.saveDataPlayer();
-        PlayerFileBuilder.savePlayerData(player);
-        PlayerFileBuilder.savePlayerDataOnQuit(player);
-        PlayerFileBuilder.savePlayerInventory(player);
-        PlayerFileBuilder.changeOnlineStatus(player.getName(), false);
+        PlayerFileFactory.savePlayerData(player);
+        PlayerFileFactory.savePlayerDataOnQuit(player);
+        PlayerFileFactory.savePlayerInventory(player);
 
     }
 }

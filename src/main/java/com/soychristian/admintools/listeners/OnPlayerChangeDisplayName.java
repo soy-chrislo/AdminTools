@@ -2,7 +2,7 @@ package com.soychristian.admintools.listeners;
 
 import com.soychristian.admintools.AdminTools;
 import com.soychristian.admintools.events.PlayerChangedDisplayNameEvent;
-import com.soychristian.admintools.config.PlayerFileBuilder;
+import com.soychristian.admintools.config.PlayerFileFactory;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -19,9 +19,9 @@ public class OnPlayerChangeDisplayName implements Listener {
     @EventHandler
     public void onPlayerChangeDisplayName(PlayerChangedDisplayNameEvent e){
         String playerName = e.getWhoChanged().getName();
-        File playerFile = PlayerFileBuilder.getPlayerFile(playerName);
+        File playerFile = PlayerFileFactory.getPlayerFile(playerName);
         List<String> playerDisplayNames = new ArrayList<>();
-        FileConfiguration playerConfig = PlayerFileBuilder.getPlayerConfig(playerName);
+        FileConfiguration playerConfig = PlayerFileFactory.getPlayerConfig(playerName);
         if (playerConfig.isList("history-displaynames")){
             playerDisplayNames = playerConfig.getStringList("history-displaynames");
             playerDisplayNames.add(e.getNewDisplayName());
@@ -31,7 +31,7 @@ public class OnPlayerChangeDisplayName implements Listener {
             playerDisplayNames.add(e.getNewDisplayName());
             playerConfig.set("history-displaynames", playerDisplayNames);
         }
-        PlayerFileBuilder.savePlayerFile(playerFile, playerConfig);
+        PlayerFileFactory.savePlayerFile(playerFile, playerConfig);
     }
 
 }

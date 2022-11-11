@@ -1,12 +1,14 @@
 package com.soychristian.admintools.views;
 
-import com.soychristian.admintools.config.PlayerFileBuilder;
+import com.soychristian.admintools.config.PlayerFileFactory;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCreativeEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -17,7 +19,7 @@ public class UserStatsGUI implements Listener {
         String playername = playerName;
         Inventory inventory = Bukkit.createInventory(null, 9 * 3, "User Stats GUI " + playerName);
 
-        String objectiveName = PlayerFileBuilder.getPlayerConfig(playername).getString("name");
+        String objectiveName = PlayerFileFactory.getPlayerConfig(playername).getString("name");
 
         ItemStack nameItem = new ItemStack(Material.PAPER);
         ItemMeta nameItemMeta = nameItem.getItemMeta();
@@ -29,19 +31,25 @@ public class UserStatsGUI implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event){
+        //if (event instanceof InventoryCreativeEvent) return;
         Inventory inventoryEvent = event.getInventory();
         Player player = (Player) event.getWhoClicked();
-        if(inventoryEvent.getName().contains("User Options GUI ")){
-            objetivePlayer = inventoryEvent.getName().split(" ")[3];
-            event.setCancelled(true);
-            ItemStack currentItem = event.getCurrentItem();
-            if (currentItem != null) {
-                if (currentItem.getType().equals(Material.BOOK)) {
-                    if (currentItem.getItemMeta().getDisplayName().equals("Stats")) {
-                        player.openInventory(UserStatsGUI.buildGui(objetivePlayer));
+        // Si el inventario no es tipo chest, retornar null
+        //if(inventoryEvent.getType() == InventoryType.CHEST){
+
+            if(event.getView().getTitle().contains("User Options GUI ")){
+                objetivePlayer = event.getView().getTitle().split(" ")[3];
+                event.setCancelled(true);
+                ItemStack currentItem = event.getCurrentItem();
+                if (currentItem != null) {
+                    if (currentItem.getType().equals(Material.BOOK)) {
+                        if (currentItem.getItemMeta().getDisplayName().equals("Stats")) {
+                            player.openInventory(UserStatsGUI.buildGui(objetivePlayer));
+                        }
                     }
                 }
             }
-        }
+        //}
+
     }
 }

@@ -9,6 +9,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCreativeEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -99,7 +101,8 @@ public class UsersOnGUI implements Listener {
         lore.add(ChatColor.GRAY + "Player Hunger: " + player.getFoodLevel());
         lore.add(ChatColor.GRAY + "Player XP: " + ChatColor.GOLD + player.getExp());
         lore.add(ChatColor.GRAY + "Player Level: " + ChatColor.GOLD + player.getLevel());
-        lore.add(ChatColor.GRAY + "Player Ping: " + ChatColor.GOLD + ((CraftPlayer) player).getHandle().ping);
+        // Error en 1.19.2
+        //lore.add(ChatColor.GRAY + "Player Ping: " + ChatColor.GOLD + ((CraftPlayer) player).getHandle().ping);
         lore.add(ChatColor.GRAY + "Player Op: " + ChatColor.GOLD + player.isOp());
         playerHeadMeta.setLore(lore);
         skullMeta.setLore(lore);
@@ -110,18 +113,22 @@ public class UsersOnGUI implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event){
-        Inventory inventory = event.getInventory();
-        if (inventory.getName().equals("Online Players")){
-            event.setCancelled(true);
-            ItemStack currentItem = event.getCurrentItem();
-            Player player = (Player) event.getWhoClicked();
-            if(currentItem.getType() == Material.ARROW){
-                if (currentItem.getItemMeta().getDisplayName().equals("Next Page")){
-                    player.openInventory(getInventory(inventories.indexOf(inventory) + 1));
-                } else if (currentItem.getItemMeta().getDisplayName().equals("Previous Page")){
-                    player.openInventory(getInventory(inventories.indexOf(inventory) - 1));
+        //if (event instanceof InventoryCreativeEvent) return;
+        Inventory inventoryEvent = event.getInventory();
+        //if(inventoryEvent.getType() == InventoryType.CHEST){
+            //if (event.getView().getTitle().contains("Online Players")){
+            if (inventories.contains(inventoryEvent)){
+                event.setCancelled(true);
+                ItemStack currentItem = event.getCurrentItem();
+                Player player = (Player) event.getWhoClicked();
+                if(currentItem.getType() == Material.ARROW){
+                    if (currentItem.getItemMeta().getDisplayName().equals("Next Page")){
+                        player.openInventory(getInventory(inventories.indexOf(inventoryEvent) + 1));
+                    } else if (currentItem.getItemMeta().getDisplayName().equals("Previous Page")){
+                        player.openInventory(getInventory(inventories.indexOf(inventoryEvent) - 1));
+                    }
                 }
             }
-        }
+        //}
     }
 }
